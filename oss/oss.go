@@ -79,6 +79,8 @@ func (p Plugin) Upload() {
 
 	toDeleteFiles := make(map[string]bool)
 
+	fmt.Println("Listing files in bucket ...")
+
 	marker := oss.Marker(objectName)
 	for {
 		lsRes, err := bucket.ListObjects(oss.MaxKeys(200), marker)
@@ -99,7 +101,7 @@ func (p Plugin) Upload() {
 		}
 	}
 
-	fmt.Println("\n+ Upload Object:")
+	fmt.Println("Listing local files to upload ...")
 	listFile(p.Config.Dist)
 
 	for _, file := range DistList {
@@ -110,6 +112,7 @@ func (p Plugin) Upload() {
 
 		toDeleteFiles[objectPath] = false
 
+		fmt.Println("Uploading " + objectPath)
 		err = bucket.PutObjectFromFile(objectPath, file)
 		if err != nil {
 			HandleError(err)
@@ -124,11 +127,12 @@ func (p Plugin) Upload() {
 	}
 
 	if len(markerList) > 0 {
+		fmt.Println("Deleting files:")
 		delRes, err := bucket.DeleteObjects(markerList)
 		if err != nil {
 			HandleError(err)
 		}
-		fmt.Println("\n+ Deleted Objects:")
+		fmt.Println("Deleted Objects:")
 		for _, obj := range delRes.DeletedObjects {
 			fmt.Println(obj)
 		}
@@ -141,7 +145,6 @@ func listFile(folder string) {
 		if file.IsDir() {
 			listFile(folder + "/" + file.Name())
 		} else {
-			fmt.Println(folder + "/" + file.Name())
 			DistList = append(DistList, folder+"/"+file.Name())
 		}
 	}
