@@ -66,14 +66,18 @@ func (p Plugin) Upload() {
 
 	bucketPath := strings.Split(p.Config.Path, "/")
 	bucketName := bucketPath[0]
-	objectName := bucketPath[1]
+	objectName := ""
+
+	if len(bucketPath) > 1 {
+		objectName = bucketPath[1]
+	}
 
 	bucket, err := client.Bucket(bucketName)
 	if err != nil {
 		HandleError(err)
 	}
 
-	var maekerList []string
+	toDeleteFiles := make(map[string]bool)
 
 	marker := oss.Marker(objectName)
 	for {
@@ -84,8 +88,10 @@ func (p Plugin) Upload() {
 		marker = oss.Marker(lsRes.NextMarker)
 		for _, path := range lsRes.Objects {
 			obj := strings.Split(path.Key, "/")[0]
-			if obj == objectName {
-				maekerList = append(maekerList, path.Key)
+			if objectName == "" {
+				toDeleteFiles[path.Key] = true
+			} else if obj == objectName {
+				toDeleteFiles[path.Key] = true
 			}
 		}
 		if !lsRes.IsTruncated {
@@ -93,25 +99,38 @@ func (p Plugin) Upload() {
 		}
 	}
 
-	fmt.Printf("+ %d files in total", len(maekerList))
-
-	delRes, err := bucket.DeleteObjects(maekerList)
-	if err != nil {
-		HandleError(err)
-	}
-	fmt.Println("\n+ Deleted Objects:")
-	for _, obj := range delRes.DeletedObjects {
-		fmt.Println(obj)
-	}
-
 	fmt.Println("\n+ Upload Object:")
 	listFile(p.Config.Dist)
 
 	for _, file := range DistList {
-		objectPath := objectName + "/" + file[len(p.Config.Dist)+1:]
+		objectPath := file[len(p.Config.Dist)+1:]
+		if objectName != "" {
+			objectPath = objectName + "/" + objectPath
+		}
+
+		toDeleteFiles[objectPath] = false
+
 		err = bucket.PutObjectFromFile(objectPath, file)
 		if err != nil {
 			HandleError(err)
+		}
+	}
+
+	var markerList []string
+	for k := range toDeleteFiles {
+		if toDeleteFiles[k] {
+			markerList = append(markerList, k)
+		}
+	}
+
+	if len(markerList) > 0 {
+		delRes, err := bucket.DeleteObjects(markerList)
+		if err != nil {
+			HandleError(err)
+		}
+		fmt.Println("\n+ Deleted Objects:")
+		for _, obj := range delRes.DeletedObjects {
+			fmt.Println(obj)
 		}
 	}
 }
