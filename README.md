@@ -1,8 +1,8 @@
-# drone plugin of oss
+# drone plugin of aliyun oss
 
 ```yaml
 - name: Upload OSS
-  image: loganhz/drone-oss
+  image: loganhz/drone-oss:0.0.1
   settings:
     dist: dist                              # dist package
     path: kk-k8s-oss/devops                 # bucket/object
