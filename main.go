@@ -1,11 +1,12 @@
 package main
 
 import (
+	"os"
+
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"github.com/sunny0826/drone-oss/oss"
 	"github.com/urfave/cli"
-	"os"
 )
 
 var (
@@ -28,6 +29,11 @@ func main() {
 			Name:   "oss.dist",
 			Usage:  "dist package path",
 			EnvVar: "PLUGIN_DIST",
+		},
+		cli.StringFlag{
+			Name:   "oss.distIgnore",
+			Usage:  "dist ignore package path",
+			EnvVar: "PLUGIN_DIST_IGNORE",
 		},
 		cli.StringFlag{
 			Name:   "oss.path",
@@ -64,12 +70,13 @@ func main() {
 func run(c *cli.Context) error {
 	plugin := oss.Plugin{
 		Config: oss.Config{
-			Dist: c.String("oss.dist"),
-			Path: c.String("oss.path"),
-			EndPoint: c.String("oss.endpoint"),
-			AccessKeyID: c.String("access.key"),
+			Dist:            c.String("oss.dist"),
+			DistIgnore:      c.String("oss.distIgnore"),
+			Path:            c.String("oss.path"),
+			EndPoint:        c.String("oss.endpoint"),
+			AccessKeyID:     c.String("access.key"),
 			AccessKeySecret: c.String("access.secret"),
-			ModName: c.String("modname"),
+			ModName:         c.String("modname"),
 		},
 	}
 

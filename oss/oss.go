@@ -2,12 +2,13 @@ package oss
 
 import (
 	"fmt"
-	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"gopkg.in/yaml.v2"
 )
 
 var DistList []string // list of dist
@@ -19,6 +20,7 @@ type (
 	// OSS config
 	Config struct {
 		Dist            string // local package
+		DistIgnore      string // add if not exist only
 		Path            string // oss path
 		EndPoint        string // oss path
 		AccessKeyID     string // access key id
@@ -112,10 +114,16 @@ func (p Plugin) Upload() {
 
 		toDeleteFiles[objectPath] = false
 
-		fmt.Println("Uploading " + objectPath)
-		err = bucket.PutObjectFromFile(objectPath, file)
-		if err != nil {
-			HandleError(err)
+		if _, ok := toDeleteFiles[objectPath]; ok {
+			if p.Config.DistIgnore != "" && strings.HasPrefix(objectPath, p.Config.DistIgnore) {
+				return
+			}
+
+			fmt.Println("Uploading " + objectPath)
+			err = bucket.PutObjectFromFile(objectPath, file)
+			if err != nil {
+				HandleError(err)
+			}
 		}
 	}
 
