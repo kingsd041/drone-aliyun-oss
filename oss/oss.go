@@ -121,13 +121,14 @@ func (p Plugin) Upload() {
 		if _, ok := toDeleteFiles[objectPath]; ok {
 			if p.Config.DistIgnore != "" && strings.HasPrefix(objectPath, p.Config.DistIgnore) {
 				fmt.Println("Ignore " + objectPath)
-			} else {
-				fmt.Println("Uploading " + objectPath)
-				err = bucket.PutObjectFromFile(objectPath, file)
-				if err != nil {
-					HandleError(err)
-				}
+				continue
 			}
+		}
+
+		fmt.Println("Uploading " + objectPath)
+		err = bucket.PutObjectFromFile(objectPath, file)
+		if err != nil {
+			HandleError(err)
 		}
 	}
 
