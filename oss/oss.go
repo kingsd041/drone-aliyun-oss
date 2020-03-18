@@ -70,6 +70,10 @@ func (p Plugin) Upload() {
 	bucketName := bucketPath[0]
 	objectName := ""
 
+	if p.Config.DistIgnore != "" {
+		fmt.Println("Ignore Dist" + p.Config.DistIgnore)
+	}
+
 	if len(bucketPath) > 1 {
 		objectName = bucketPath[1]
 	}
@@ -116,13 +120,13 @@ func (p Plugin) Upload() {
 
 		if _, ok := toDeleteFiles[objectPath]; ok {
 			if p.Config.DistIgnore != "" && strings.HasPrefix(objectPath, p.Config.DistIgnore) {
-				return
-			}
-
-			fmt.Println("Uploading " + objectPath)
-			err = bucket.PutObjectFromFile(objectPath, file)
-			if err != nil {
-				HandleError(err)
+				fmt.Println("Ignore " + objectPath)
+			} else {
+				fmt.Println("Uploading " + objectPath)
+				err = bucket.PutObjectFromFile(objectPath, file)
+				if err != nil {
+					HandleError(err)
+				}
 			}
 		}
 	}
