@@ -71,7 +71,7 @@ func (p Plugin) Upload() {
 	objectName := ""
 
 	if p.Config.DistIgnore != "" {
-		fmt.Println("Ignore Dist" + p.Config.DistIgnore)
+		fmt.Println("Ignore Dist: " + p.Config.DistIgnore)
 	}
 
 	if len(bucketPath) > 1 {
@@ -116,15 +116,15 @@ func (p Plugin) Upload() {
 			objectPath = objectName + "/" + objectPath
 		}
 
-		toDeleteFiles[objectPath] = false
-
 		if _, ok := toDeleteFiles[objectPath]; ok {
 			if p.Config.DistIgnore != "" && strings.HasPrefix(objectPath, p.Config.DistIgnore) {
 				fmt.Println("Ignore " + objectPath)
+				toDeleteFiles[objectPath] = false
 				continue
 			}
 		}
 
+		toDeleteFiles[objectPath] = false
 		fmt.Println("Uploading " + objectPath)
 		err = bucket.PutObjectFromFile(objectPath, file)
 		if err != nil {
