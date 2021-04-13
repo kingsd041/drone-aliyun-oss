@@ -143,6 +143,7 @@ func (p Plugin) Upload() {
 		fmt.Println("Deleting files:")
 		delRes, err := bucket.DeleteObjects(markerList)
 		if err != nil {
+            fmt.Println(markerList)
 			HandleError(err)
 		}
 		fmt.Println("Deleted Objects:")
