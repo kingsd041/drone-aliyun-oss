@@ -141,6 +141,9 @@ func (p Plugin) Upload() {
 
 	if len(markerList) > 0 {
 		fmt.Println("Deleting files:")
+		for _, p := range markerList {
+			fmt.Println(p)
+		}
 		delRes, err := bucket.DeleteObjects(markerList)
 		if err != nil {
 			fmt.Println(markerList)
