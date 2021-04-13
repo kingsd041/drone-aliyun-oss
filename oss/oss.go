@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"strings"
 
@@ -141,17 +142,28 @@ func (p Plugin) Upload() {
 
 	if len(markerList) > 0 {
 		fmt.Println("Deleting files:")
-		for _, p := range markerList {
-			fmt.Println(p)
+		list := SplitSlice(markerList, 50)
+		delResources := make([]oss.DeleteObjectsResult, 0, len(list))
+		for _, l := range list {
+			r, err := bucket.DeleteObjects(l)
+			if err != nil {
+				fmt.Println("Deleted Objects:")
+				for _, delRes := range delResources {
+					for _, obj := range delRes.DeletedObjects {
+						fmt.Println(obj)
+					}
+				}
+				HandleError(err)
+				log.Println("Delete Files Error: " + err.Error())
+			}
+			delResources = append(delResources, r)
 		}
-		delRes, err := bucket.DeleteObjects(markerList)
-		if err != nil {
-			// HandleError(err)
-			log.Println("Delete Files Error: " + err.Error())
-		}
+
 		fmt.Println("Deleted Objects:")
-		for _, obj := range delRes.DeletedObjects {
-			fmt.Println(obj)
+		for _, delRes := range delResources {
+			for _, obj := range delRes.DeletedObjects {
+				fmt.Println(obj)
+			}
 		}
 	}
 }
@@ -182,4 +194,24 @@ func (c *Envfile) ReadYaml(f string) {
 func HandleError(err error) {
 	fmt.Println("+ Error:", err)
 	os.Exit(-1)
+}
+
+func SplitSlice(slice []string, num int) [][]string {
+	length := len(slice)
+
+	if length <= num || num == 0 {
+		segments := make([][]string, 0, 1)
+		segments = append(segments, slice[:])
+		return segments
+	}
+	count := int(math.Ceil(float64(length) / float64(num)))
+	segments := make([][]string, 0, count)
+	for i := 0; i < count; i++ {
+		if i == count-1 {
+			segments = append(segments, slice[i*num:])
+		} else {
+			segments = append(segments, slice[i*num:(i+1)*num])
+		}
+	}
+	return segments
 }
